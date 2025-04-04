@@ -53,6 +53,7 @@ def upload_video():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Run Flask app
+# This makes the app callable for Gunicorn
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8080)
+
