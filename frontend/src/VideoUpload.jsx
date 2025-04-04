@@ -1,56 +1,74 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { FaCloudUploadAlt } from "react-icons/fa";
+import "./VideoUpload.css"; // Import external CSS
 
 const VideoUpload = () => {
-  const [file, setFile] = useState(null);
-  const [processedFile, setProcessedFile] = useState(null);
-  const [loading, setLoading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [buttonClicked, setButtonClicked] = useState(false);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+    const handleFileChange = (event) => {
+        setSelectedFile(event.target.files[0]);
+    };
 
-  const handleUpload = async () => {
-    if (!file) return alert("Please select a video");
-    
-    setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+    const handleUpload = async () => {
+        if (!selectedFile) {
+            alert("Please select a file first!");
+            return;
+        }
 
-    try {
-      const res = await axios.post("http://127.0.0.1:5000/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setProcessedFile(res.data.output_file);
-    } catch (error) {
-      console.error("Upload error:", error);
-      alert("Upload failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+        const formData = new FormData();
+        formData.append("file", selectedFile);
 
-  return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>Upload Video for Cartoon Effect</h2>
-      <input type="file" accept="video/*" onChange={handleFileChange} />
-      <button onClick={handleUpload} disabled={loading}>
-        {loading ? "Processing..." : "Upload & Convert"}
-      </button>
+        setIsProcessing(true);
+        setButtonClicked(true); // Change button color
 
-      {processedFile && (
-        <div>
-          <h3>Processed Video</h3>
-          <video controls width="400">
-            <source src={`http://127.0.0.1:5000/download/${processedFile}`} type="video/mp4" />
-          </video>
-          <a href={`http://127.0.0.1:5000/download/${processedFile}`} download>
-            <button>Download</button>
-          </a>
+        try {
+            const response = await axios.post("http://127.0.0.1:5000/upload", formData, {
+                responseType: "blob", // Expect a binary file (video)
+            });
+
+            // Create a download link for the video
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: "video/mp4" }));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "cartoon_video.mp4"); // Set download filename
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Error processing video!");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    return (
+        <div className="upload-container">
+            <h2 className="upload-title">🎨 Convert Your Video to Cartoon</h2>
+
+            <label className="upload-box">
+                <FaCloudUploadAlt className="upload-icon" />
+                <input type="file" onChange={handleFileChange} className="file-input" />
+                <p>Click or Drag to Upload Video</p>
+            </label>
+
+            {selectedFile && (
+                <p className="file-name">📂 Selected: {selectedFile.name}</p>
+            )}
+
+            <button
+                className={`upload-button ${buttonClicked ? "clicked" : ""}`}
+                onClick={handleUpload}
+                disabled={isProcessing}
+            >
+                {isProcessing ? "⏳ Processing..." : "🎥 Convert to Cartoon"}
+            </button>
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default VideoUpload;
