@@ -25,7 +25,7 @@ const VideoUpload = () => {
         setButtonClicked(true); // Change button color
 
         try {
-            const response = await axios.post("http://127.0.0.1:5000/upload", formData, {
+            const response = await axios.post("https://ghibli-video.onrender.com/upload", formData, {
                 responseType: "blob", // Expect a binary file (video)
             });
 
